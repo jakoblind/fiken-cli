@@ -58,14 +58,16 @@ func (e *APIError) Error() string {
 }
 
 // doRequest performs a rate-limited HTTP request.
+// The mutex is held through the entire request to enforce Fiken's
+// single-concurrent-request requirement.
 func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
 	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	elapsed := time.Since(c.lastReq)
 	if elapsed < c.minDelay {
 		time.Sleep(c.minDelay - elapsed)
 	}
-	c.lastReq = time.Now()
-	c.mu.Unlock()
 
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Accept", "application/json")
@@ -74,6 +76,7 @@ func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
 	}
 
 	resp, err := c.httpClient.Do(req)
+	c.lastReq = time.Now()
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
