@@ -124,15 +124,38 @@ fiken status                # Overview of pending items
 | `--json` | Output as JSON (default: table) |
 | `--no-input` | Non-interactive mode |
 | `--company <slug>` | Select company (auto-detected if only one) |
+| `--keyring-backend <backend>` | Keyring backend (default: `auto`) |
 
-## Configuration
+## Credential Storage
 
-Configuration is stored in `~/.config/fiken/`:
+Credentials (API token, default company) are stored securely using your OS keyring via [99designs/keyring](https://github.com/99designs/keyring).
 
-| File | Purpose |
-|------|---------|
-| `token` | API bearer token |
-| `config.json` | CLI settings (default company, etc.) |
+### Supported backends
+
+| Backend | OS | Flag value |
+|---------|----|------------|
+| Secret Service (GNOME Keyring / KDE Wallet) | Linux | `secret-service` |
+| Keychain | macOS | `keychain` |
+| Windows Credential Manager | Windows | `wincred` |
+| [pass](https://www.passwordstore.org/) | Linux/macOS | `pass` |
+| Encrypted file | Any (fallback) | `file` |
+
+By default (`auto`), the best available backend is used. The encrypted file backend is the last-resort fallback and will prompt for a password.
+
+### Choosing a backend
+
+```bash
+# Use a specific backend
+fiken --keyring-backend file auth token <token>
+
+# Or set via environment variable
+export FIKEN_KEYRING_BACKEND=file
+fiken auth token <token>
+```
+
+### Migration from plaintext storage
+
+If you previously stored your token in `~/.config/fiken/token`, it will be automatically migrated to the keyring on first use. The plaintext file is deleted after successful migration.
 
 ## API Details
 

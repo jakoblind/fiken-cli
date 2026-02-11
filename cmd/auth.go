@@ -68,7 +68,7 @@ To avoid exposing the token in process listings, pipe it via stdin:
 			return fmt.Errorf("saving token: %w", err)
 		}
 
-		output.PrintSuccess("Token saved to ~/.config/fiken/token")
+		output.PrintSuccess("Token saved to keyring")
 		return nil
 	},
 }

@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	jsonOutput bool
-	noInput    bool
-	company    string
+	jsonOutput     bool
+	noInput        bool
+	company        string
+	keyringBackend string
 )
 
 var rootCmd = &cobra.Command{
@@ -23,6 +24,10 @@ var rootCmd = &cobra.Command{
 
 Manage your Norwegian business accounting from the terminal:
 companies, purchases, invoices, bank accounts, and more.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Apply keyring backend setting before any command runs.
+		auth.KeyringBackend = keyringBackend
+	},
 }
 
 // Execute runs the root command.
@@ -36,6 +41,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&jsonOutput, "json", false, "Output as JSON")
 	rootCmd.PersistentFlags().BoolVar(&noInput, "no-input", false, "Non-interactive mode")
 	rootCmd.PersistentFlags().StringVar(&company, "company", "", "Company slug (auto-detected if only one)")
+	rootCmd.PersistentFlags().StringVar(&keyringBackend, "keyring-backend", "auto",
+		"Keyring backend: auto, secret-service, keychain, wincred, pass, file")
+
+	// Support FIKEN_KEYRING_BACKEND env var as default.
+	if env := os.Getenv("FIKEN_KEYRING_BACKEND"); env != "" {
+		keyringBackend = env
+	}
 }
 
 // getClient creates an API client using the stored token.
